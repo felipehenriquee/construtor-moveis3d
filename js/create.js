@@ -12,6 +12,7 @@ import { CSS3DObject } from './../node_modules/three/examples/jsm/renderers/CSS3
 import { Objetos } from './objects.js';
 
 let ids = []
+let idsCima = []
 
 // import { Projector } from './node_modules/three/examples/jsm/loaders/DRACOLoader.js';
 
@@ -120,9 +121,9 @@ for (let i = 0; i < objetos.todosObjetos.length; i++) {
 console.log(divCadaModelo)
 for (let i = 0; i < objetos.todosObjetos.length; i++) {
 	const button = document.createElement( 'button' );
-	button.textContent = objetos.todosObjetos[i].nome
-	button.className = 'botaoEscolha';
 
+	button.className = 'botaoEscolha backgroundImage';
+	button.style.backgroundImage =  `url('${objetos.todosObjetos[i].img}')`
 	button.addEventListener('pointerdown', function(event){
 		corEscolhida = "#E56399";
 		
@@ -161,7 +162,8 @@ let adicionaCubo = true;
 let ladoEscolhido;
 let ladoEscolhidoTemporario;
 let modeloEscolhido
-
+let indexEscolhido;
+let indexEscolhidoTemporario;
 const menuLabel = new CSS2DObject( menuDiv );
 
 
@@ -201,10 +203,12 @@ addButton.addEventListener('pointerdown', function(event){
 		ladoEscolhido = "direita"
 	}
 	else if (ladoEscolhidoTemporario=="cima"){
+		console.log(indexEscolhido, indexEscolhidoTemporario)
 		xEscolhido = 0;
 		yEscolhido = 1;
 		adicionaCubo = true;
-		ladoEscolhido = "cima"
+		ladoEscolhido = "cima";
+		indexEscolhido = indexEscolhidoTemporario
 	}
 	mostraMenu()
 
@@ -225,7 +229,6 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath( './node_modules/three/examples/js/libs/draco/' );
 loader.setDRACOLoader( dracoLoader );
 // Load a glTF resource
-
 
 const closeButton = document.createElement( 'button' );
 closeButton.textContent = "X"
@@ -289,6 +292,7 @@ function criaObjeto(x, y){
 			
 			gltf.scene.name = "first"
 			ids.push(gltf.scene.id)
+			idsCima.push(0)
 
 			// console.log(cube1BB.getCenter())
 		},
@@ -359,6 +363,7 @@ function criaObjetoChao(modelo, px, py){
 			// direita
 			if (px>0){
 				ids.push(gltf.scene.id)
+				const teste = !idsCima[ids.length-1] ? idsCima.push(modelo.tamanhoy==1 ? 0 : gltf.scene.id) : idsCima[ids.length-1]
 				gltf.scene.userData.centroDireita = true;
 				// console.log(cubeEscolhido.userData.tamanho.fimx + tamanhox)
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.max.x)+gltf.scene.box3.max.x);
@@ -384,6 +389,7 @@ function criaObjetoChao(modelo, px, py){
 			// esquerda
 			else if (px<0){
 				ids.unshift(gltf.scene.id)
+				const teste = !idsCima[ids.length-1] ? idsCima.unshift(1) : idsCima[ids.length-1]
 				gltf.scene.userData.centroEsquerda = true;
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.min.x)+gltf.scene.box3.min.x);
 
@@ -405,7 +411,7 @@ function criaObjetoChao(modelo, px, py){
 					id: gltf.scene.id
 				}
 			}
-			console.log(ids)
+			console.log(ids, idsCima)
 			
 			// console.log(gltf.scene)
 			
@@ -431,7 +437,7 @@ function criaObjetoChao(modelo, px, py){
 	
 }
 
-function criaObjetoCima(modelo, px, py){
+function criaObjetoCima(modelo, px, py, index){
 	console.log('cria')
 	loader.load(
 		// resource URL
@@ -479,8 +485,11 @@ function criaObjetoCima(modelo, px, py){
 				}
 				
 			}
+			console.log(indexEscolhido)
 			// direita
 			if (px>0){
+				
+				idsCima[indexEscolhido] = gltf.scene.id
 				console.log(cubeEscolhido.position.x+(cubeEscolhido.userData.tamanho.fimx/2)+tamanhox/2 )
 				// gltf.scene.position.setX(cubeEscolhido.position.x+cubeEscolhido.userData.tamanho.fimx/2+tamanhox/2);
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.max.x)+gltf.scene.box3.max.x);
@@ -496,6 +505,7 @@ function criaObjetoCima(modelo, px, py){
 			}
 			// esquerda
 			else if (px<0){
+				idsCima[indexEscolhido] = gltf.scene.id
 				gltf.scene.position.setX(cubeEscolhido.position.x-tamanhox);
 
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.min.x)+gltf.scene.box3.min.x);
@@ -510,6 +520,7 @@ function criaObjetoCima(modelo, px, py){
 			}
 			// cima
 			else if (py>0){
+				idsCima[indexEscolhido] = gltf.scene.id
 				gltf.scene.position.setX(cubeEscolhido.position.x);
 
 				gltf.scene.userData.tamanho = {
@@ -532,6 +543,7 @@ function criaObjetoCima(modelo, px, py){
 			console.log(gltf.scene)
 			console.log(cube1BB)
 			console.log(scene)
+			console.log(idsCima)
 			// console.log(cube1BB.getCenter())
 		},
 		// called while loading is progressing
@@ -579,9 +591,9 @@ function realocaModelo(){
 				let cubeDireita =  scene.getObjectById(ids[i+1]);
 				let cubeEsquerda = scene.getObjectById(ids[i-1]);
 				let tamanho = cubeAtual.userData.tamanho.fimx - cubeAtual.userData.tamanho.iniciox;
-				cubeEsquerda.userData.tamanho.fimx = cubeEsquerda.userData.tamanho.fimx + tamanho;
-				cubeEsquerda.userData.tamanho.iniciox = cubeEsquerda.userData.tamanho.iniciox + tamanho;
-				cubeEsquerda.position.setX(cubeDireita.position.x+tamanhoApagar);
+				cubeEsquerda.userData.tamanho.fimx = cubeEsquerda.userData.tamanho.fimx - tamanho;
+				cubeEsquerda.userData.tamanho.iniciox = cubeEsquerda.userData.tamanho.iniciox - tamanho;
+				cubeEsquerda.position.setX(cubeEsquerda.position.x-tamanhoApagar);
 				cubeDireita.userData.esquerda = cubeEsquerda.userData.esquerda;
 
 			}
@@ -737,7 +749,7 @@ function criaCubo(){
 	corEscolhida = "#000000";
 	
 
-	const material = new THREE.MeshBasicMaterial({color: corEscolhida, transparent: true });
+	const material = new THREE.MeshBasicMaterial({color: corEscolhida, transparent: true, opacity: 0 });
 	
 	
 	let cubeEscolhido = scene.getObjectById(uuidEscolhidoTemporario);
@@ -860,13 +872,15 @@ function onPointerMove( event ) {
 		
 		modeloEscolhido = cubeEscolhido.userData.modelo;
 		// direita
-		btnRemove.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y+0.85)
+		btnRemove.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y+2.1)
 		btnRemove.position.setX(cubeEscolhido.position.x)
 		removeButton.classList.remove('hide')
 		addButton.classList.remove("hide")
-
+		indexEscolhidoTemporario = cubeEscolhido.userData.modelo.tipo=="chao" ? ids.indexOf(uuidEscolhidoTemporario) : idsCima.indexOf(uuidEscolhidoTemporario);
+		let tamanho = cubeEscolhido.userData.modelo.tipo=="chao" ? ids.length : idsCima.length;
+		console.log(indexEscolhidoTemporario, ids.length-1)
 		if (cubeEscolhido.userData.modelo.colocarDireita 
-			&& cubeEscolhido.userData.direita.preenchido == false 
+			&& indexEscolhidoTemporario==tamanho-1
 			&& intersects[0].point.x>=raioPositivo 
 			&&  intersects[0].point.y<=raioYPositivo){
 
@@ -874,7 +888,7 @@ function onPointerMove( event ) {
 
 
 			btnAdd.position.setX(cubeEscolhido.position.x+0.4)
-			btnAdd.position.setY(cubeEscolhido.position.y+0.5)
+			btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y+0.5 : cubeEscolhido.position.y+1.6)
 		}
 			// // cima
 			
@@ -888,7 +902,7 @@ function onPointerMove( event ) {
 			btnAdd.position.setY(cubeEscolhido.position.y+0.85)
 		}
 		// esquerda
-		else if (cubeEscolhido.userData.modelo.colocarEsquerda && cubeEscolhido.userData.esquerda.preenchido == false && intersects[0].point.x<=raioNegativo){
+		else if (cubeEscolhido.userData.modelo.colocarEsquerda && indexEscolhidoTemporario==0 && intersects[0].point.x<=raioNegativo){
 			
 			ladoEscolhidoTemporario = "esquerda"
 			btnAdd.position.setX(cubeEscolhido.position.x-0.5)
@@ -908,23 +922,74 @@ window.addEventListener( 'pointermove', onPointerMove );
 function mostraMenu(modelo, posicao){
 	
 	menuDiv.classList.remove("hide");
+	for (let k = 0; k < botoes.length; k++) {
+		botoes[k].button.classList.add("hide")
+		
+	}
 	for (let i = 0; i < divCadaModelo.length; i++) {
+		divCadaModelo[i].cadaModelo.classList.add("hide");
 		if(modeloEscolhido.tipo == "chao"){
 			
-			divCadaModelo[i].cadaModelo.classList.add("hide");
-			console.log(divCadaModelo[i].cadaModelo)
-			if (ladoEscolhido == 'cima' && divCadaModelo[i].tipo == "cima"  && (botoes[i].tamanhox == modeloEscolhido.tamanhox)){
-				// console.log(botoes[i].tamanhox, modelo.tamanhox)
+			
+			
+			
+			console.log(ladoEscolhido, divCadaModelo[i].tipo,botoes[i].tamanhox, modeloEscolhido.tamanhox)
+			if (ladoEscolhido == 'cima' && divCadaModelo[i].tipo == "cima"){
+				console.log(botoes, divCadaModelo[i])
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
+				for (let j = 0; j < botoes.length; j++) {
+					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+					if (botoes[j].tamanhox==modeloEscolhido.tamanhox){
+						console.log(botoes[j].button)
+						botoes[j].button.classList.remove("hide")
+					}
+
+				}
+				
 			}
 			else if (ladoEscolhido == 'direita' && divCadaModelo[i].tipo != "cima" ){
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
+				for (let j = 0; j < botoes.length; j++) {
+					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+					if (botoes[j].tipo=="chao"){
+						console.log(botoes[j].button)
+						botoes[j].button.classList.remove("hide")
+					}
+
+				}
 			}
 			else if (ladoEscolhido == 'esquerda' && divCadaModelo[i].tipo != "cima" ){
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
+				for (let j = 0; j < botoes.length; j++) {
+					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+					if (botoes[j].tipo=="chao"){
+						console.log(botoes[j].button)
+						botoes[j].button.classList.remove("hide")
+					}
+
+				}
 			}
 		}
+		else {
+			if(ladoEscolhido == 'direita' && divCadaModelo[i].tipo == "cima"){
+				divCadaModelo[i].cadaModelo.classList.remove("hide");
+				for (let j = 0; j < botoes.length; j++) {
+					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+					if (botoes[j].tipo=="cima"){
+						console.log(botoes[j].button)
+						botoes[j].button.classList.remove("hide")
+					}
 
+				}
+			}
+			else if(ladoEscolhido == 'esquerda' && divCadaModelo[i].tipo == "cima"){
+				divCadaModelo[i].cadaModelo.classList.remove("hide");
+				if (botoes[j].tipo=="cima"){
+					console.log(botoes[j].button)
+					botoes[j].button.classList.remove("hide")
+				}
+			}
+		}
 		
 	}
 }
