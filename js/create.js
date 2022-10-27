@@ -64,7 +64,7 @@ const cubos = [];
 // criação menu
 const menuDiv = document.createElement( 'div' );
 menuDiv.className = 'label';
-menuDiv.className = 'hide';
+// menuDiv.className = 'hide';
 
 // criação do cabecalho do menu
 const cabecalhoDiv = document.createElement( 'div' );
@@ -137,7 +137,7 @@ for (let i = 0; i < objetos.todosObjetos.length; i++) {
 			
 			criaObjetoCima(objetos.todosObjetos[i], xEscolhido, yEscolhido)
 		}
-		menuDiv.classList.add("hide");
+		// menuDiv.classList.add("hide");
 		adicionaCubo = false;
 	});
 	botoes.push({button, tipo: objetos.todosObjetos[i].tipo, tamanhox: objetos.todosObjetos[i].tamanhox})
@@ -158,7 +158,7 @@ let xEscolhido = 0;
 let yEscolhido = 0;
 let uuidEscolhido = "";
 let uuidEscolhidoTemporario = "";
-let adicionaCubo = true;
+let adicionaCubo = false;
 let ladoEscolhido;
 let ladoEscolhidoTemporario;
 let modeloEscolhido
@@ -182,10 +182,6 @@ const btnRemove = new CSS3DObject( removeButton );
 btnRemove.scale.set(0.01, 0.01, 1)
 btnRemove.position.setZ(0.6)
 
-
-
-
-
 const addButton = document.createElement( 'button' );
 addButton.className = 'btnAdd backgroundImage hide';
 addButton.addEventListener('pointerdown', function(event){
@@ -195,12 +191,14 @@ addButton.addEventListener('pointerdown', function(event){
 		yEscolhido = 0
 		adicionaCubo = true;
 		ladoEscolhido = "esquerda"
+		indexEscolhido = indexEscolhidoTemporario
 	}
 	else if (ladoEscolhidoTemporario=="direita"){
 		xEscolhido = 1;
 		yEscolhido = 0
 		adicionaCubo = true;
 		ladoEscolhido = "direita"
+		indexEscolhido = indexEscolhidoTemporario
 	}
 	else if (ladoEscolhidoTemporario=="cima"){
 		console.log(indexEscolhido, indexEscolhidoTemporario)
@@ -292,8 +290,8 @@ function criaObjeto(x, y){
 			
 			gltf.scene.name = "first"
 			ids.push(gltf.scene.id)
-			idsCima.push(0)
-
+			criaCuboCima(true)
+			console.log(ids, idsCima)
 			// console.log(cube1BB.getCenter())
 		},
 		// called while loading is progressing
@@ -362,9 +360,13 @@ function criaObjetoChao(modelo, px, py){
 
 			// direita
 			if (px>0){
-				ids.push(gltf.scene.id)
-				const teste = !idsCima[ids.length-1] ? idsCima.push(modelo.tamanhoy==1 ? 0 : gltf.scene.id) : idsCima[ids.length-1]
-				gltf.scene.userData.centroDireita = true;
+				let cubeDireita = ids[indexEscolhido+1] ? scene.getObjectById(ids[indexEscolhido+1]) : null
+				if(cubeDireita && cubeDireita.name=="cubo"){
+					scene.remove(cubeDireita)
+				}
+				ids[indexEscolhido+1] ? ids[indexEscolhido+1] = gltf.scene.id : ids.push(gltf.scene.id)
+				
+
 				// console.log(cubeEscolhido.userData.tamanho.fimx + tamanhox)
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.max.x)+gltf.scene.box3.max.x);
 				
@@ -384,12 +386,16 @@ function criaObjetoChao(modelo, px, py){
 					preenchido: true,
 					id: gltf.scene.id
 				}
+				if (!idsCima[indexEscolhido+1]) criaCuboCima(true)
 				
 			}
 			// esquerda
 			else if (px<0){
-				ids.unshift(gltf.scene.id)
-				const teste = !idsCima[ids.length-1] ? idsCima.unshift(1) : idsCima[ids.length-1]
+				let cubeEsquerda = ids[indexEscolhido-1] ? scene.getObjectById(ids[indexEscolhido-1]) : null
+				if(cubeEsquerda && cubeEsquerda.name=="cubo"){
+					scene.remove(cubeEsquerda)
+				}
+				ids[indexEscolhido-1] ? ids[indexEscolhido-1] = gltf.scene.id : ids.unshift(gltf.scene.id)
 				gltf.scene.userData.centroEsquerda = true;
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.min.x)+gltf.scene.box3.min.x);
 
@@ -410,12 +416,14 @@ function criaObjetoChao(modelo, px, py){
 					preenchido: true,
 					id: gltf.scene.id
 				}
+				if(!idsCima[indexEscolhido-1]) criaCuboCima(true)
 			}
 			console.log(ids, idsCima)
 			
 			// console.log(gltf.scene)
 			
 			console.log(scene)
+
 			// console.log(cube1BB.getCenter())
 		},
 		// called while loading is progressing
@@ -450,19 +458,15 @@ function criaObjetoCima(modelo, px, py, index){
 			cube1BB.setFromObject(gltf.scene)
 			gltf.scene.box3 = cube1BB;
 			let cubeEscolhido = scene.getObjectById(uuidEscolhido);
-			// gltf.scene.position.set(xEscolhido, yEscolhido, 0);
-			
-			// if (cubeEscolhido.userData.modelo.tipo == "cima"){
-			// 	gltf.scene.position.setY(cubeEscolhido.position.y);
-			// }
-			// else{
-			// 	gltf.scene.position.setY(cubeEscolhido.position.y + 1.33);
-			// }
+
 			
 			const tamanhox = cube1BB.max.x - cube1BB.min.x;
 			const tamanhoy = cube1BB.max.y - cube1BB.min.y;
 			gltf.scene.userData = {
 				modelo,
+				centro: false,
+				centroDireita: false,
+				centroEsquerda: false,
 				tamanho: {
 					iniciox: cube1BB.min.x,
 					fimx: cube1BB.max.x,
@@ -488,9 +492,17 @@ function criaObjetoCima(modelo, px, py, index){
 			console.log(indexEscolhido)
 			// direita
 			if (px>0){
-				
-				idsCima[indexEscolhido] = gltf.scene.id
-				console.log(cubeEscolhido.position.x+(cubeEscolhido.userData.tamanho.fimx/2)+tamanhox/2 )
+				gltf.scene.userData.centroDireita = true
+				cubeEscolhido.userData.modelo.tipo=="chao" ? idsCima[indexEscolhido] = gltf.scene.id : idsCima.push(gltf.scene.id)
+
+				let cubeDireita = idsCima[indexEscolhido+1] ? scene.getObjectById(idsCima[indexEscolhido+1]) : null;
+
+				if (cubeDireita && cubeDireita.name=="cubo"){
+					scene.remove(cubeDireita)
+					idsCima.splice(indexEscolhido+1, 1)
+					console.log(idsCima)
+				}
+
 				// gltf.scene.position.setX(cubeEscolhido.position.x+cubeEscolhido.userData.tamanho.fimx/2+tamanhox/2);
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.max.x)+gltf.scene.box3.max.x);
 				
@@ -502,10 +514,24 @@ function criaObjetoCima(modelo, px, py, index){
 					fimy: gltf.scene.box3.max.y
 				}
 				cubeEscolhido.direita = {preenchido: true, id: gltf.scene.id};
+				if (!ids[indexEscolhido+1]){
+					// ids[indexEscolhido+1] = 0;
+					criaCubo(true)
+
+				}
 			}
 			// esquerda
 			else if (px<0){
-				idsCima[indexEscolhido] = gltf.scene.id
+				gltf.scene.userData.centroEsquerda = true
+				cubeEscolhido.userData.modelo.tipo=="chao" ? idsCima[indexEscolhido] = gltf.scene.id : idsCima.unshift(gltf.scene.id)
+				let cubeDireita = idsCima[indexEscolhido] ? scene.getObjectById(idsCima[indexEscolhido]) : null;
+				console.log(idsCima, idsCima[indexEscolhido], indexEscolhido)
+				if (cubeDireita && cubeDireita.name=="cubo"){
+					scene.remove(cubeDireita)
+					idsCima.splice(indexEscolhido-1, 1)
+					console.log(idsCima)
+				}
+
 				gltf.scene.position.setX(cubeEscolhido.position.x-tamanhox);
 
 				gltf.scene.position.setX(cubeEscolhido.position.x+(cubeEscolhido.box3.min.x)+gltf.scene.box3.min.x);
@@ -517,9 +543,17 @@ function criaObjetoCima(modelo, px, py, index){
 					inicioy: gltf.scene.box3.min.y,
 					fimy: gltf.scene.box3.max.y
 				}
+				criaCubo(true)
 			}
 			// cima
 			else if (py>0){
+				gltf.scene.userData.centroDireita = cubeEscolhido.userData.centroDireita
+				gltf.scene.userData.centroEsquerda = cubeEscolhido.userData.centroEsquerda
+				gltf.scene.userData.centro = cubeEscolhido.userData.centro
+
+				let cubeRemover= scene.getObjectById(idsCima[indexEscolhido]);
+				console.log(cubeRemover)
+				scene.remove(cubeRemover)
 				idsCima[indexEscolhido] = gltf.scene.id
 				gltf.scene.position.setX(cubeEscolhido.position.x);
 
@@ -543,7 +577,7 @@ function criaObjetoCima(modelo, px, py, index){
 			console.log(gltf.scene)
 			console.log(cube1BB)
 			console.log(scene)
-			console.log(idsCima)
+			console.log(idsCima, ids)
 			// console.log(cube1BB.getCenter())
 		},
 		// called while loading is progressing
@@ -567,14 +601,17 @@ function criaObjetoCima(modelo, px, py, index){
 
 function remove(){
 	const obj = scene.getObjectById(uuidEscolhido);
-	if (obj.name == "cubo"){
+	
+	
+	if (obj.name == "cubo" && idsCima[indexEscolhidoTemporario]==0){
 		realocaModelo();
+		scene.remove(obj);
 	}
 	else{
-		criaCubo()
-		
+		obj.userData.modelo.tipo == "chao" ? criaCubo() : criaCuboCima()
+		scene.remove(obj);
 	}
-	scene.remove(obj);
+	
 
 }
 
@@ -648,7 +685,8 @@ function realocaModelo(){
 	
 
 	ids.splice(index, 1);
-	console.log(ids)
+	idsCima.splice(index, 1);
+	console.log(ids, idsCima)
 
 	// while (temDireita == true ){
 	// 	let cubeVerificar = scene.getObjectById(idVerificar);
@@ -736,7 +774,7 @@ function realocaModelo(){
 
 }
 
-function criaCubo(){
+function criaCubo(embaixo = false){
 	let modeloCubo = {
 		colocarCima: true,
         colocarDireita: true,
@@ -749,15 +787,18 @@ function criaCubo(){
 	corEscolhida = "#000000";
 	
 
-	const material = new THREE.MeshBasicMaterial({color: corEscolhida, transparent: true, opacity: 0 });
+	const material = new THREE.MeshBasicMaterial({color: corEscolhida, transparent: true,});
 	
 	
-	let cubeEscolhido = scene.getObjectById(uuidEscolhidoTemporario);
-	const  geometry =  new  THREE.BoxGeometry(cubeEscolhido.box3.min.x-cubeEscolhido.box3.max.x,0.86,1);
+	let cubeEscolhido = idsCima.length==0 || ladoEscolhido=="esquerda" ? scene.getObjectById(ids[0]) : scene.getObjectById(uuidEscolhidoTemporario);
+	let cubeCima = idsCima.length==0 || ladoEscolhido=="esquerda" ? scene.getObjectById(idsCima[0]) : scene.getObjectById(idsCima[indexEscolhido+1]);
+
+	
+	const  geometry =  new  THREE.BoxGeometry(embaixo ?  cubeCima.box3.min.x-cubeCima.box3.max.x : cubeEscolhido.box3.min.x-cubeEscolhido.box3.max.x,0.86,1);
 	const cube = new THREE.Mesh(geometry, material)
+	
 	scene.add(cube)
 	modeloCubo.tamanhox = cubeEscolhido.userData.modelo.tamanhox;
-	
 	
 	let cube2BB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 	cube2BB.setFromObject(cube)
@@ -765,7 +806,6 @@ function criaCubo(){
 	cube.box3 = cube2BB;
 	cube.position.setY(cube.position.y+(cube.position.y - cube2BB.min.y))
 	const tamanhox = cube2BB.max.x - cube2BB.min.x;
-	console.log(tamanhox)
 	const tamanhoy = cube2BB.max.y - cube2BB.min.y;
 	cube.userData = {
 		modelo: modeloCubo,
@@ -785,13 +825,15 @@ function criaCubo(){
 		
 	}
 	// cube.position.setX(cubeEscolhido.position.x);
-	let index = ids.indexOf(cubeEscolhido.id)
+	let index = embaixo ? idsCima.indexOf(cubeEscolhido.id) : ids.indexOf(cubeEscolhido.id)
 	console.log(index);
-	ids[index] = cube.id;
+	embaixo ? (ladoEscolhido=="esquerda" ? ids.unshift(cube.id) : ids.push(cube.id)) : ids[index] = cube.id;
+	
 	console.log(ids)
 	console.log(cubeEscolhido.userData.centroDireita, cubeEscolhido.userData.centro)
-	if (cubeEscolhido.userData.centroDireita){
-		cube.position.setX(cubeEscolhido.position.x);
+	if (ladoEscolhido == "direita"){
+		
+		embaixo ? cube.position.setX(cubeCima.position.x) : cube.position.setX(cubeEscolhido.position.x);
 		
 		console.log("cubo direito")
 
@@ -799,6 +841,85 @@ function criaCubo(){
 	else{
 		console.log("cubo esquerdo")
 
+		embaixo ? cube.position.setX(cubeCima.position.x) : cube.position.setX(cubeEscolhido.position.x);
+
+		
+	}
+	
+
+	cube.position.getComponent(0);
+	cube.name = "cubo"
+	console.log(cubeEscolhido)
+	
+	console.log(cube)
+	
+}
+function criaCuboCima(emcima= false){
+	let modeloCubo = {
+		colocarCima: false,
+        colocarDireita: true,
+        colocarEsquerda: true,
+		tipo: "cima",
+        tamanhox: 1,
+        tamanhoy: 1,
+        botao: null
+	}
+	corEscolhida = "#000000";
+	
+
+	const material = new THREE.MeshBasicMaterial({color: corEscolhida, transparent: true,});
+	
+	
+	let cubeEscolhido = ids.length==1 || ladoEscolhido=="esquerda" ? scene.getObjectById(ids[0]) : scene.getObjectById(uuidEscolhidoTemporario);
+	let cubeBaixo = ids.length==1 || ladoEscolhido=="esquerda" ? scene.getObjectById(ids[0]) : scene.getObjectById(ids[indexEscolhido+1]);
+	
+	
+	const  geometry =  new  THREE.BoxGeometry(emcima ? cubeBaixo.box3.min.x-cubeBaixo.box3.max.x : cubeEscolhido.box3.min.x-cubeEscolhido.box3.max.x,0.86,1);
+	const cube = new THREE.Mesh(geometry, material)
+	
+	scene.add(cube)
+	modeloCubo.tamanhox = cubeEscolhido.userData.modelo.tamanhox;
+	
+	let cube2BB = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+	cube2BB.setFromObject(cube)
+	console.log(cube2BB)
+	cube.box3 = cube2BB;
+	cube.position.setY(cube.position.y+(cube.position.y - cube2BB.min.y)+1.44)
+	const tamanhox = cube2BB.max.x - cube2BB.min.x;
+	const tamanhoy = cube2BB.max.y - cube2BB.min.y;
+	cube.userData = {
+		modelo: modeloCubo,
+		centro: cubeEscolhido.userData.centro,
+		centroDireita: cubeEscolhido.userData.centroDireita,
+		centroEsquerda: cubeEscolhido.userData.centroEsquerda,
+		tamanho: {
+			iniciox: cubeEscolhido.userData.tamanho.iniciox,
+			fimx: cubeEscolhido.userData.tamanho.fimx,
+			inicioy: cubeEscolhido.userData.tamanho.inicioy,
+			fimy: cubeEscolhido.userData.tamanho.fimy
+		},
+		cima: cubeEscolhido.userData.cima,
+		direita: cubeEscolhido.userData.direita,
+		baixo: cubeEscolhido.userData.baixo,
+		esquerda: cubeEscolhido.userData.esquerda
+		
+	}
+	// cube.position.setX(cubeEscolhido.position.x);
+	let index = emcima ? idsCima.indexOf(cubeEscolhido.id) : ids.indexOf(cubeEscolhido.id)
+	console.log(index);
+	emcima ? (ladoEscolhido=="esquerda" ? idsCima.unshift(cube.id): idsCima.push(cube.id)) : idsCima[index] = cube.id ;
+	console.log(ids, idsCima)
+	
+	if (ladoEscolhido == "direita"){
+		
+		emcima ? cube.position.setX(cubeBaixo.position.x) : cube.position.setX(cubeEscolhido.position.x);
+		
+		console.log("cubo direito")
+
+	}
+	else{
+		console.log("cubo esquerdo")
+		emcima ? cube.position.setX(cubeBaixo.position.x) : cube.position.setX(cubeEscolhido.position.x);
 		cube.position.setX(cubeEscolhido.position.x);
 
 		
@@ -867,47 +988,98 @@ function onPointerMove( event ) {
 		const raioPositivo = cubeEscolhido.userData.tamanho.fimx - cubeEscolhido.userData.tamanho.fimx/4;
 		const raioNegativo = cubeEscolhido.userData.tamanho.iniciox + cubeEscolhido.userData.tamanho.fimx/2;
 
-		const raioYPositivo = cubeEscolhido.userData.tamanho.inicioy + cubeEscolhido.userData.tamanho.fimy/1.5;
+		const raioYPositivo = cubeEscolhido.name=="cubo" ? cubeEscolhido.position.y + (cubeEscolhido.userData.tamanho.fimy - cubeEscolhido.userData.tamanho.inicioy )/4 : cubeEscolhido.userData.tamanho.inicioy + cubeEscolhido.userData.tamanho.fimy/1.5;
 		const raioYNegativo = cubeEscolhido.userData.tamanho.inicioy + cubeEscolhido.userData.tamanho.fimy/4;
 		
 		modeloEscolhido = cubeEscolhido.userData.modelo;
-		// direita
-		btnRemove.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y+2.1)
-		btnRemove.position.setX(cubeEscolhido.position.x)
+		
+		if (cubeEscolhido.name=="cubo"){
+			btnRemove.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y-0.5: cubeEscolhido.position.y+0.5)
+			btnRemove.position.setX(cubeEscolhido.position.x)
+		}
+		else {
+			btnRemove.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y+2.1)
+			btnRemove.position.setX(cubeEscolhido.position.x)
+		}
 		removeButton.classList.remove('hide')
 		addButton.classList.remove("hide")
 		indexEscolhidoTemporario = cubeEscolhido.userData.modelo.tipo=="chao" ? ids.indexOf(uuidEscolhidoTemporario) : idsCima.indexOf(uuidEscolhidoTemporario);
+		let listaTemporario = cubeEscolhido.userData.modelo.tipo=="chao" ? ids : idsCima;
 		let tamanho = cubeEscolhido.userData.modelo.tipo=="chao" ? ids.length : idsCima.length;
-		console.log(indexEscolhidoTemporario, ids.length-1)
-		if (cubeEscolhido.userData.modelo.colocarDireita 
-			&& indexEscolhidoTemporario==tamanho-1
-			&& intersects[0].point.x>=raioPositivo 
-			&&  intersects[0].point.y<=raioYPositivo){
 
-			ladoEscolhidoTemporario = "direita"
+		// cubeEscolhido.userData.modelo.tipo=="chao" && idsCima[indexEscolhidoTemporario] ? cButton.textContent = "X" : idsCima.length
+
+		// direita
+		if (intersects[0].point.x>=raioPositivo &&  intersects[0].point.y<=raioYPositivo){
+			let cubeDireita = listaTemporario[indexEscolhidoTemporario+1] ? scene.getObjectById(listaTemporario[indexEscolhidoTemporario+1]) : null
+			console.log(cubeDireita)
+			if (!cubeDireita || cubeDireita.name == "cubo"){
+				ladoEscolhidoTemporario = "direita"
+
+				if (cubeEscolhido.name == "cubo"){
+					btnAdd.position.setX(cubeEscolhido.position.x+0.3)
+					btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y)
+				}
+				else{
+					btnAdd.position.setX(cubeEscolhido.position.x+0.3)
+					btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y+0.5 : cubeEscolhido.position.y+1.6)
+				}
+	
+			}
 
 
-			btnAdd.position.setX(cubeEscolhido.position.x+0.4)
-			btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y+0.5 : cubeEscolhido.position.y+1.6)
 		}
 			// // cima
-			
-		else if (cubeEscolhido.userData.modelo.colocarCima && cubeEscolhido.userData.cima.preenchido == false && intersects[0].point.y>=raioYPositivo){
+		
+		else if ( intersects[0].point.y>=raioYPositivo && cubeEscolhido.userData.modelo.tipo=="chao"){
 
 			
+			let cubeCima = scene.getObjectById(idsCima[indexEscolhidoTemporario]);
+			console.log(cubeCima)
+			if (cubeCima.name == "cubo"){
+				
+				ladoEscolhidoTemporario = "cima"
+				if (cubeEscolhido.name == "cubo"){
+					btnAdd.position.setX(cubeEscolhido.position.x)
+					btnAdd.position.setY(cubeEscolhido.position.y+0.5)
+				}
+				else{
+					btnAdd.position.setX(cubeEscolhido.position.x)
+					btnAdd.position.setY(cubeEscolhido.position.y+0.85)
+				}
 
-			ladoEscolhidoTemporario = "cima"
+			}
 
-			btnAdd.position.setX(cubeEscolhido.position.x)
-			btnAdd.position.setY(cubeEscolhido.position.y+0.85)
 		}
 		// esquerda
-		else if (cubeEscolhido.userData.modelo.colocarEsquerda && indexEscolhidoTemporario==0 && intersects[0].point.x<=raioNegativo){
-			
+		else if (cubeEscolhido.userData.modelo.colocarEsquerda && intersects[0].point.x<=raioNegativo){
+			let cubeEsquerda = listaTemporario[indexEscolhidoTemporario-1] ? scene.getObjectById(listaTemporario[indexEscolhidoTemporario-1]) : null
 			ladoEscolhidoTemporario = "esquerda"
-			btnAdd.position.setX(cubeEscolhido.position.x-0.5)
-			btnAdd.position.setY(cubeEscolhido.position.y+0.5)
+			console.log(cubeEsquerda?.name)
+			if (!cubeEsquerda || cubeEsquerda.name == "cubo"){
+				if (cubeEscolhido.name == "cubo"){
+					btnAdd.position.setX(cubeEscolhido.position.x-0.3)
+					btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y : cubeEscolhido.position.y)
+				}
+				else{
+					btnAdd.position.setX(cubeEscolhido.position.x-0.3)
+					btnAdd.position.setY(cubeEscolhido.userData.modelo.tipo=="chao" ? cubeEscolhido.position.y+0.5 : cubeEscolhido.position.y+1.6)
+				}
+			}
+
+
 			
+		}
+		else if ( intersects[0].point.y<=raioYNegativo){
+			let cubeEmbaixo = ids[indexEscolhidoTemporario] ? scene.getObjectById(ids[indexEscolhidoTemporario]) : null
+			if (!cubeEmbaixo || cubeEmbaixo.name == "cubo"){
+				
+				ladoEscolhidoTemporario = "cima"
+
+				btnAdd.position.setX(cubeEscolhido.position.x)
+				btnAdd.position.setY(cubeEscolhido.position.y+1.2)
+			}
+
 		}
 	}
 
@@ -916,8 +1088,6 @@ function onPointerMove( event ) {
 
 }
 window.addEventListener( 'pointermove', onPointerMove );
-
-
 
 function mostraMenu(modelo, posicao){
 	
@@ -933,14 +1103,14 @@ function mostraMenu(modelo, posicao){
 			
 			
 			
-			console.log(ladoEscolhido, divCadaModelo[i].tipo,botoes[i].tamanhox, modeloEscolhido.tamanhox)
+			
 			if (ladoEscolhido == 'cima' && divCadaModelo[i].tipo == "cima"){
-				console.log(botoes, divCadaModelo[i])
+
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
 				for (let j = 0; j < botoes.length; j++) {
 					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
 					if (botoes[j].tamanhox==modeloEscolhido.tamanhox){
-						console.log(botoes[j].button)
+					
 						botoes[j].button.classList.remove("hide")
 					}
 
@@ -950,9 +1120,9 @@ function mostraMenu(modelo, posicao){
 			else if (ladoEscolhido == 'direita' && divCadaModelo[i].tipo != "cima" ){
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
 				for (let j = 0; j < botoes.length; j++) {
-					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+
 					if (botoes[j].tipo=="chao"){
-						console.log(botoes[j].button)
+
 						botoes[j].button.classList.remove("hide")
 					}
 
@@ -961,9 +1131,9 @@ function mostraMenu(modelo, posicao){
 			else if (ladoEscolhido == 'esquerda' && divCadaModelo[i].tipo != "cima" ){
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
 				for (let j = 0; j < botoes.length; j++) {
-					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+
 					if (botoes[j].tipo=="chao"){
-						console.log(botoes[j].button)
+					
 						botoes[j].button.classList.remove("hide")
 					}
 
@@ -984,9 +1154,13 @@ function mostraMenu(modelo, posicao){
 			}
 			else if(ladoEscolhido == 'esquerda' && divCadaModelo[i].tipo == "cima"){
 				divCadaModelo[i].cadaModelo.classList.remove("hide");
-				if (botoes[j].tipo=="cima"){
-					console.log(botoes[j].button)
-					botoes[j].button.classList.remove("hide")
+				for (let j = 0; j < botoes.length; j++) {
+					console.log(botoes[j].tamanhox, modeloEscolhido.tamanhox)
+					if (botoes[j].tipo=="cima"){
+						console.log(botoes[j].button)
+						botoes[j].button.classList.remove("hide")
+					}
+
 				}
 			}
 		}
